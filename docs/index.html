@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>LanDeploy · 局域网分发 iOS 测试包</title>
 <meta name="description" content="把用 Ad Hoc 描述文件签名的 iOS 安装包，通过局域网分发给同一 Wi-Fi 下的 iPhone 和 iPad。扫码即可安装。">
+<!-- 这页多半是被丢进团队群里传开的，预览卡得立得住 -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="LanDeploy · 局域网分发 iOS 测试包">
+<meta property="og:description" content="电脑上开一个局域网服务，把签好名的 IPA 分发出去。测试的同学用 iPhone 扫个码就能装。">
+<meta property="og:url" content="https://luck-yxh.github.io/LanDeploy/">
+<meta property="og:image" content="https://luck-yxh.github.io/LanDeploy/app-icon.png">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#0b0924">
 <link rel="icon" href="app-icon.png">
 <link rel="apple-touch-icon" href="app-icon.png">
 <style>
@@ -12,14 +20,13 @@
  * 视觉语言与 App 外观一致，两者都来自同一个图标：
  *   1. 光从左上来 —— 受光边在上、阴影偏右下
  *   2. 玻璃，不是卡片 —— 半透明 + 顶边亮线 + 背景模糊
- *   3. 渐变只用在会动的地方 —— 主按钮、品牌标
+ *   3. 渐变只给品牌标和主按钮 —— 步骤徽章用描边、连线用青色，别稀释它
  *   4. 深靛，不是黑
  *   5. 画布有光晕 —— 柔和的蓝紫径向光
  *   6. 圆角分等级 —— 大容器 22px、按钮 13px、标签 7px
  */
 :root {
   --ink: #0b0924;
-  --ink-2: #141138;
   --glass: rgba(255, 255, 255, 0.055);
   --glass-hover: rgba(255, 255, 255, 0.09);
   --edge: rgba(255, 255, 255, 0.1);
@@ -31,9 +38,9 @@
   --paper: #eef1ff;
   --paper-2: #b8c0e6;
   --paper-3: #858dc0;
-  --warn: #f0b24a;
-  --danger: #ff6b8a;
+  --wire: rgba(255, 255, 255, 0.18);
   --radius: 22px;
+  --gap: 34px;
 }
 
 * { box-sizing: border-box; }
@@ -43,7 +50,7 @@ body {
   color: var(--paper);
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
                "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-  line-height: 1.7;
+  line-height: 1.75;
   -webkit-font-smoothing: antialiased;
   background:
     radial-gradient(120% 85% at 14% -12%, #1e2f7d 0%, transparent 55%),
@@ -65,23 +72,23 @@ a:focus-visible, button:focus-visible {
 .hero {
   display: flex;
   align-items: center;
-  gap: 48px;
-  padding: 84px 0 64px;
+  gap: 44px;
+  padding: 68px 0 56px;
 }
 
 .hero-copy { flex: 1; min-width: 0; }
 
 .hero h1 {
-  margin: 0 0 16px;
-  font-size: clamp(30px, 5vw, 44px);
-  line-height: 1.22;
+  margin: 0 0 18px;
+  font-size: clamp(30px, 4.6vw, 42px);
+  line-height: 1.24;
   font-weight: 680;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.021em;
 }
 
-.hero p {
+.hero-lede {
   margin: 0 0 30px;
-  max-width: 30em;
+  max-width: 29em;
   font-size: 16px;
   color: var(--paper-2);
 }
@@ -89,13 +96,20 @@ a:focus-visible, button:focus-visible {
 /* 图标放大做首屏主视觉，自带一圈同色柔光——和 App 里的品牌位同源 */
 .hero-mark {
   flex-shrink: 0;
-  width: 208px;
-  height: 208px;
-  border-radius: 46px;
+  width: 176px;
+  height: 176px;
+  border-radius: 40px;
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.12),
-    0 28px 70px rgba(47, 141, 251, 0.42),
-    0 8px 24px rgba(5, 3, 26, 0.5);
+    0 26px 64px rgba(47, 141, 251, 0.4),
+    0 8px 22px rgba(5, 3, 26, 0.5);
+}
+
+/* 主按钮下面的一句实话，比一排「·」分隔的标签好读 */
+.after-cta {
+  margin: 16px 0 0;
+  font-size: 13px;
+  color: var(--paper-3);
 }
 
 /* ---------- 按钮 ---------- */
@@ -136,16 +150,16 @@ a:focus-visible, button:focus-visible {
 
 /* ---------- 分节 ---------- */
 
-section { padding: 54px 0; }
+section { padding: 52px 0; }
 
 h2 {
   margin: 0 0 10px;
-  font-size: 24px;
+  font-size: 23px;
   font-weight: 660;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.012em;
 }
 
-.lede { margin: 0 0 30px; color: var(--paper-2); font-size: 15px; max-width: 34em; }
+.lede { margin: 0 0 32px; color: var(--paper-2); font-size: 15px; max-width: 33em; }
 
 /* 玻璃表面：受光边在顶部 */
 .card {
@@ -157,36 +171,96 @@ h2 {
   box-shadow: inset 0 1px 0 var(--edge-bright), 0 18px 40px rgba(5, 3, 26, 0.5);
 }
 
-/* ---------- 三步 ---------- */
+/* ---------- 三步：一条真实的路径 ---------- */
 
 /*
- * 这里用编号是有理由的：内容真的是个序列（导入 → 启动 → 扫码），
- * 编号承载的是「先后顺序」，不是装饰。
+ * 这里不是三个并排的卡片，是一条通路：电脑 → 局域网 → 手机。
+ * 连线上的光点顺着走，因为数据包确实就是这么走的——这是全站唯一
+ * 一处自发运动，它描述的是产品的核心动作，不是装饰。
  */
-.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; counter-reset: step; }
-
-.step { position: relative; padding-top: 62px; }
-
-.step::before {
-  counter-increment: step;
-  content: counter(step);
-  position: absolute;
-  top: 20px;
-  left: 24px;
+.flow {
   display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 10px;
-  background: var(--grad);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 700;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.4), 0 6px 16px rgba(47,141,251,.4);
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: stage;
 }
 
-.step h3 { margin: 0 0 6px; font-size: 15.5px; font-weight: 640; }
-.step p { margin: 0; font-size: 13.5px; color: var(--paper-2); }
+.stage { position: relative; }
+
+/* 连线是一条真元素，不是伪元素——光点要拿它当坐标基准才能走完全程。
+   伪元素上的 translateY(100%) 是元素自身高度的 100%，只能挪 8px。 */
+.wire {
+  position: absolute;
+  top: 43px;
+  left: 100%;
+  width: var(--gap);
+  height: 2px;
+  background: repeating-linear-gradient(90deg, var(--wire) 0 4px, transparent 4px 10px);
+}
+
+.stage:last-child .wire { display: none; }
+
+/* 沿连线走的光点 */
+.wire::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  margin-top: -4px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 12px rgba(61, 186, 252, 0.9);
+  animation: travel 3.4s cubic-bezier(.45,0,.55,1) infinite;
+}
+
+@keyframes travel {
+  0%   { transform: translateX(-4px);      opacity: 0; }
+  15%  {                                   opacity: 1; }
+  85%  {                                   opacity: 1; }
+  100% { transform: translateX(var(--gap)); opacity: 0; }
+}
+
+/* 插画：固定高度，连线才能对齐 */
+.stage-art {
+  height: 86px;
+  margin-bottom: 18px;
+  color: rgba(255, 255, 255, 0.5);
+}
+.stage-art svg { display: block; width: 86px; height: 86px; }
+.stage-art .lit { color: var(--cyan); }
+
+/* 序号：描边而不是渐变填充——渐变留给品牌标和主按钮 */
+.stage h3 {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  margin: 0 0 6px;
+  font-size: 15.5px;
+  font-weight: 640;
+}
+
+.stage h3::before {
+  counter-increment: stage;
+  content: counter(stage);
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--edge-bright);
+  border-radius: 7px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--paper-2);
+  transform: translateY(-1px);
+}
+
+.stage p { margin: 0; font-size: 13.5px; color: var(--paper-2); }
 
 /* ---------- 设备端设置 ---------- */
 
@@ -208,20 +282,23 @@ h2 {
 
 /* ---------- 下载 ---------- */
 
-.downloads { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+/* 认出访客的系统后，那一张会亮起来——多数人只想拿到自己机器能用的那个文件 */
+/* 五个文件排成一行。宽度是按「macOS · Apple 芯片」这一行最长的标题量出来的，
+   再窄它就要折行；158px 是 940px 容器里刚好放下五列的下限。 */
+.downloads { display: grid; grid-template-columns: repeat(auto-fit, minmax(158px, 1fr)); gap: 12px; }
 
 .dl {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 20px;
+  gap: 3px;
+  padding: 18px 16px;
   border-radius: 18px;
   background: var(--glass);
   border: 1px solid var(--edge);
   backdrop-filter: blur(24px) saturate(140%);
   box-shadow: inset 0 1px 0 var(--edge-bright), 0 18px 40px rgba(5, 3, 26, 0.5);
   color: var(--paper);
-  transition: border-color .15s, background .15s;
+  transition: border-color .15s, background .15s, box-shadow .15s;
 }
 
 .dl:hover {
@@ -230,7 +307,32 @@ h2 {
   background: var(--glass-hover);
 }
 
+/* 推荐态：只加一道青色边，不换底色——不然五张卡片会打架 */
+.dl.is-rec {
+  border-color: rgba(61, 186, 252, 0.5);
+  box-shadow:
+    inset 0 1px 0 var(--edge-bright),
+    0 0 0 1px rgba(61, 186, 252, 0.22),
+    0 18px 40px rgba(47, 141, 251, 0.22);
+}
+
+.dl-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .dl-platform { font-size: 14.5px; font-weight: 640; }
+
+.dl-badge {
+  display: none;
+  padding: 1px 7px;
+  border-radius: 7px;
+  background: rgba(61, 186, 252, 0.16);
+  border: 1px solid rgba(61, 186, 252, 0.34);
+  color: #a5dcff;
+  font-size: 11px;
+  font-weight: 620;
+  line-height: 1.6;
+}
+
+.dl.is-rec .dl-badge { display: inline-block; }
+
 .dl-detail { font-size: 12.5px; color: var(--paper-3); }
 .dl-arrow { margin-top: 10px; font-size: 13px; color: var(--cyan); }
 
@@ -239,6 +341,7 @@ h2 {
 .faq { display: flex; flex-direction: column; gap: 14px; }
 .faq h3 { margin: 0 0 6px; font-size: 15px; font-weight: 640; }
 .faq p { margin: 0; font-size: 13.5px; color: var(--paper-2); }
+.faq p + p { margin-top: 8px; }
 .faq code {
   padding: 2px 6px;
   border-radius: 6px;
@@ -269,12 +372,50 @@ footer {
 
 /* ---------- 窄屏 ---------- */
 
-@media (max-width: 760px) {
-  .hero { flex-direction: column-reverse; align-items: flex-start; gap: 32px; padding: 56px 0 40px; text-align: left; }
-  .hero-mark { width: 132px; height: 132px; border-radius: 30px; }
-  .steps { grid-template-columns: 1fr; }
+@media (max-width: 780px) {
+  .hero { flex-direction: column-reverse; align-items: flex-start; gap: 28px; padding: 48px 0 36px; }
+  .hero-mark { width: 116px; height: 116px; border-radius: 27px; }
+
+  /* 竖排时连线改成竖的，光点跟着往下走。
+     这里把 --gap 重定义成竖向间距，连线用它当作「伸到下一格」的距离。 */
+  .flow { grid-template-columns: 1fr; --gap: 26px; gap: var(--gap); }
+  .stage { padding-left: 62px; }
+  .stage-art {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 46px;
+    margin: 0;
+  }
+  .stage-art svg { width: 46px; height: 46px; }
+
+  .wire {
+    top: 46px;
+    left: 22px;
+    width: 2px;
+    height: auto;
+    bottom: calc(-1 * var(--gap));
+    background: repeating-linear-gradient(180deg, var(--wire) 0 4px, transparent 4px 10px);
+  }
+
+  /* 光点垂直居中于竖线；横向居中交给 transform，动画只动 top */
+  .wire::after {
+    top: 0;
+    left: 50%;
+    margin-top: 0;
+    transform: translateX(-50%);
+    animation-name: travel-down;
+  }
+
+  @keyframes travel-down {
+    0%   { top: 0;                opacity: 0; }
+    15%  {                        opacity: 1; }
+    85%  {                        opacity: 1; }
+    100% { top: calc(100% - 8px); opacity: 0; }
+  }
+
   .setup { grid-template-columns: 1fr; }
-  section { padding: 40px 0; }
+  section { padding: 38px 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -289,41 +430,78 @@ footer {
   <div class="hero">
     <div class="hero-copy">
       <h1>把 iOS 测试包<br>送到同事手机上</h1>
-      <p>
+      <p class="hero-lede">
         LanDeploy 在一台电脑上开一个局域网服务，把用 Ad Hoc 描述文件签名的
         IPA 分发出去。测试的同学用 iPhone 扫个码就能装，不用连线、不用装工具。
       </p>
       <div class="actions">
-        <a class="btn btn-primary" href="https://github.com/LUCK-YXH/LanDeploy/releases/latest">
-          下载最新版 <span id="version"></span>
+        <a class="btn btn-primary" id="primary-dl" href="https://github.com/LUCK-YXH/LanDeploy/releases/latest">
+          <span id="primary-label">下载最新版</span>
         </a>
         <a class="btn btn-ghost" href="#downloads">按平台选择</a>
       </div>
+      <p class="after-cta">电脑端支持 macOS、Windows 和 Linux；手机上只需要 Safari。</p>
     </div>
-    <img class="hero-mark" src="app-icon.png" alt="LanDeploy" width="208" height="208">
+    <img class="hero-mark" src="app-icon.png" alt="LanDeploy" width="176" height="176">
   </div>
 
-  <section>
-    <h2>三步</h2>
-    <p class="lede">管理端在电脑上操作，设备端只需要扫码。</p>
-    <div class="steps">
-      <div class="step card">
-        <h3>导入安装包</h3>
-        <p>把已经签好名的 IPA 拖进来。多余的信息——图标、版本、签名类型、描述文件什么时候过期——会自动读出来。</p>
-      </div>
-      <div class="step card">
-        <h3>启动服务</h3>
-        <p>点一下「启动」，电脑就成了分发点，并生成二维码。同一个 Wi-Fi 下的设备都能访问。</p>
-      </div>
-      <div class="step card">
+  <section id="how">
+    <h2>从电脑，到手机</h2>
+    <p class="lede">
+      电脑上准备好，手机上扫一次码。中间这段路走的是你自己的局域网，不经过任何服务器。
+    </p>
+    <ol class="flow">
+      <li class="stage"><span class="wire" aria-hidden="true"></span>
+        <div class="stage-art" aria-hidden="true">
+          <!-- 电脑：屏幕上是一份待办清单 -->
+          <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round">
+            <rect x="6" y="12" width="52" height="34" rx="5"/>
+            <path d="M32 46v8M22 56h20"/>
+            <rect x="14" y="21" width="24" height="3.4" rx="1.7" class="lit" style="fill:var(--cyan);stroke:none"/>
+            <rect x="14" y="28.5" width="34" height="3.4" rx="1.7"/>
+            <rect x="14" y="36" width="18" height="3.4" rx="1.7"/>
+          </svg>
+        </div>
+        <h3>导入并启动</h3>
+        <p>把签好名的 IPA 拖进来，图标、版本、签名类型、描述文件什么时候过期都会自动读出来。点一下启动，这台电脑就成了分发点。</p>
+      </li>
+      <li class="stage"><span class="wire" aria-hidden="true"></span>
+        <div class="stage-art" aria-hidden="true">
+          <!-- 中间：同一段局域网 -->
+          <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6.5 20.5a36 36 0 0 1 51 0"/>
+            <path d="M13.6 27.6a26 26 0 0 1 36.8 0" class="lit" style="stroke:var(--cyan)"/>
+            <path d="M22.1 36.1a14 14 0 0 1 19.8 0" class="lit" style="stroke:var(--cyan)"/>
+            <circle cx="32" cy="47" r="3.6" style="fill:var(--cyan);stroke:none"/>
+          </svg>
+        </div>
+        <h3>连上同一个 Wi-Fi</h3>
+        <p>手机和电脑要在同一个能互访的网络里。有些访客网络会把设备隔开，那样扫码打不开页面。</p>
+      </li>
+      <li class="stage"><span class="wire" aria-hidden="true"></span>
+        <div class="stage-art" aria-hidden="true">
+          <!-- 手机：屏幕上是二维码 -->
+          <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round">
+            <rect x="18" y="5" width="28" height="54" rx="7"/>
+            <path d="M27.5 10.5h9"/>
+            <rect x="24" y="19" width="8.4" height="8.4" rx="2" class="lit" style="fill:var(--cyan);stroke:none"/>
+            <rect x="35" y="19" width="5.6" height="5.6" rx="1.4"/>
+            <rect x="35" y="27.6" width="5.6" height="5.6" rx="1.4"/>
+            <rect x="24" y="30.4" width="8.4" height="8.4" rx="2"/>
+            <path d="M25 44h14" class="lit" style="stroke:var(--cyan)"/>
+          </svg>
+        </div>
         <h3>扫码安装</h3>
-        <p>设备用 Safari 扫码，按提示装包。哪些包是开发版、哪些描述文件快过期了，页面上都标着。</p>
-      </div>
-    </div>
+        <p>用 Safari 扫电脑上显示的二维码，按提示装。哪些包是开发版、哪个描述文件快过期了，页面上都标着。</p>
+      </li>
+    </ol>
   </section>
 
-  <section>
-    <h2>设备端的一次性设置</h2>
+  <section id="setup">
+    <h2>设备上要先做一次设置</h2>
     <p class="lede">每台设备只需要做一次，之后扫码即装。</p>
     <div class="setup">
       <div class="card">
@@ -349,37 +527,52 @@ footer {
 
   <section id="downloads">
     <h2>下载</h2>
-    <p class="lede">打包由 CI 自动完成，产物发布在公开仓库里。</p>
+    <p class="lede">打包由 CI 自动完成，产物发布在公开仓库里。你的系统已经标出来了。</p>
     <div class="downloads">
       <a class="dl" data-download="mac-arm" href="https://github.com/LUCK-YXH/LanDeploy/releases/latest">
-        <span class="dl-platform">macOS · Apple Silicon</span>
-        <span class="dl-detail">M 系列芯片，.dmg</span>
+        <span class="dl-head">
+          <span class="dl-platform">macOS · M 系列</span>
+          <span class="dl-badge">你的系统</span>
+        </span>
+        <span class="dl-detail">Apple 芯片，.dmg</span>
         <span class="dl-arrow">下载</span>
       </a>
       <a class="dl" data-download="mac-intel" href="https://github.com/LUCK-YXH/LanDeploy/releases/latest">
-        <span class="dl-platform">macOS · Intel</span>
+        <span class="dl-head">
+          <span class="dl-platform">macOS · Intel</span>
+          <span class="dl-badge">你的系统</span>
+        </span>
         <span class="dl-detail">x86_64，.dmg</span>
         <span class="dl-arrow">下载</span>
       </a>
       <a class="dl" data-download="win" href="https://github.com/LUCK-YXH/LanDeploy/releases/latest">
-        <span class="dl-platform">Windows</span>
+        <span class="dl-head">
+          <span class="dl-platform">Windows</span>
+          <span class="dl-badge">你的系统</span>
+        </span>
         <span class="dl-detail">x64，.exe 安装程序</span>
         <span class="dl-arrow">下载</span>
       </a>
       <a class="dl" data-download="linux-deb" href="https://github.com/LUCK-YXH/LanDeploy/releases/latest">
-        <span class="dl-platform">Linux</span>
+        <span class="dl-head">
+          <span class="dl-platform">Linux</span>
+          <span class="dl-badge">你的系统</span>
+        </span>
         <span class="dl-detail">Debian / Ubuntu，.deb</span>
         <span class="dl-arrow">下载</span>
       </a>
       <a class="dl" data-download="linux-appimage" href="https://github.com/LUCK-YXH/LanDeploy/releases/latest">
-        <span class="dl-platform">Linux · 通用</span>
+        <span class="dl-head">
+          <span class="dl-platform">Linux · 通用</span>
+          <span class="dl-badge">你的系统</span>
+        </span>
         <span class="dl-detail">不挑发行版，.AppImage</span>
         <span class="dl-arrow">下载</span>
       </a>
     </div>
   </section>
 
-  <section>
+  <section id="faq">
     <h2>常见问题</h2>
     <div class="faq">
       <div class="card">
@@ -394,16 +587,16 @@ footer {
         <p>
           这两句话听起来像同一件事，其实不是，处理方式也不同：
         </p>
-        <p style="margin-top:8px">
+        <p>
           <strong>无法验证开发者</strong>是系统不认识发布者——签名是好的，右键打开就行。<br>
           <strong>已损坏</strong>是签名本身校验不过——没有点开的路径，只能清掉隔离标记。
         </p>
-        <p style="margin-top:10px">
+        <p>
           提示「已损坏」说明拿到的是 <strong>0.1.0 的旧包</strong>，那个版本打包时漏了签名步骤。
           请改用 0.1.1 及以上；确实需要救急，就清掉隔离标记：
         </p>
         <pre><code>xattr -dr com.apple.quarantine /Applications/LanDeploy.app</code></pre>
-        <p style="margin-top:8px">先把 App 从 DMG 拖进「应用程序」再执行，对着 DMG 里那份执行不生效。</p>
+        <p>先把 App 从 DMG 拖进「应用程序」再执行，对着 DMG 里那份执行不生效。</p>
       </div>
       <div class="card">
         <h3>设备上提示「无法安装」</h3>
@@ -446,36 +639,78 @@ footer {
 
 <script>
 /*
- * 把各平台按钮直接指到最新版本的对应文件，而不是让使用者自己在一堆附件里找。
- * 拿不到就留在「最新版」页面——降级成两步，而不是留下死链接。
+ * 1. 认出访客的系统，把主按钮直接指到那一个文件——多数人不想在五个附件里挑。
+ * 2. 认不出就退回「最新版」页面：降级成两步，而不是留下死链接。
  */
 (function () {
   var repo = "LUCK-YXH/LanDeploy";
-  var patterns = {
+  var files = {
     "mac-arm": /aarch64\.dmg$/,
     "mac-intel": /x64\.dmg$/,
     "win": /x64-setup\.exe$/,
     "linux-deb": /amd64\.deb$/,
     "linux-appimage": /amd64\.AppImage$/
   };
+  /* 按钮不必复述芯片型号——已经替访客选好了，型号写在卡片上 */
+  var labels = {
+    "mac-arm": "下载 macOS 版",
+    "mac-intel": "下载 macOS 版",
+    "win": "下载 Windows 版",
+    "linux-deb": "下载 Linux 版",
+    "linux-appimage": "下载 Linux 版"
+  };
+
+  /* iPadOS 的 Safari 把自己报成 Macintosh，靠触点数量认出来——
+     这些访客恰恰是来装包的那一端，不该给他推电脑端安装程序。 */
+  function detect() {
+    var ua = navigator.userAgent;
+    if (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) return null;
+    if (/Windows/i.test(ua)) return "win";
+    if (/Mac OS X|Macintosh/i.test(ua)) return macArch() === "intel" ? "mac-intel" : "mac-arm";
+    if (/Linux/i.test(ua) && !/Android/i.test(ua)) return "linux-deb";
+    return null;
+  }
+
+  /* Safari 的 UA 不区分芯片，用 WebGL 渲染器认。认不出按 Apple 芯片走——M 系列已是绝大多数 */
+  function macArch() {
+    try {
+      var gl = document.createElement("canvas").getContext("webgl");
+      var ext = gl && gl.getExtension("WEBGL_debug_renderer_info");
+      var r = String(ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : "");
+      if (/Intel|AMD|Radeon|NVIDIA|GeForce/i.test(r)) return "intel";
+    } catch (e) { /* 拿不到就按下面的默认值 */ }
+    return "arm";
+  }
+
+  var want = detect();
+  var primary = document.getElementById("primary-dl");
+  var primaryLabel = document.getElementById("primary-label");
+
+  if (want) {
+    var card = document.querySelector('[data-download="' + want + '"]');
+    if (card) card.classList.add("is-rec");
+    if (primaryLabel) primaryLabel.textContent = labels[want];
+  }
 
   fetch("https://api.github.com/repos/" + repo + "/releases/latest")
     .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
     .then(function (release) {
-      var versionEl = document.getElementById("version");
-      if (versionEl && release.tag_name) versionEl.textContent = release.tag_name;
-
-      Object.keys(patterns).forEach(function (key) {
+      Object.keys(files).forEach(function (key) {
         var el = document.querySelector('[data-download="' + key + '"]');
         if (!el) return;
         var asset = (release.assets || []).filter(function (a) {
-          return patterns[key].test(a.name);
+          return files[key].test(a.name);
         })[0];
-        if (asset) el.href = asset.browser_download_url;
+        if (!asset) return;
+        el.href = asset.browser_download_url;
+        if (key === want && primary) primary.href = asset.browser_download_url;
       });
+
+      /* 认不出系统时，至少把主按钮指到最新版页面 */
+      if (primary && !want && release.html_url) primary.href = release.html_url;
     })
     .catch(function () {
-      /* 保持指向 releases/latest，不影响使用 */
+      /* 保持静态指向 releases/latest，不影响使用 */
     });
 })();
 </script>
