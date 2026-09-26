@@ -14,13 +14,15 @@
 
 ## macOS 首次打开
 
-构建产物没有做代码签名与公证，macOS 会拦一次。任选一种方式放行：
+构建产物是 **ad-hoc 签名**（没有证书链），所以 macOS 报的是**「已损坏，无法打开」**，而不是「无法验证开发者」。
+
+**右键 → 打开对这种提示无效。** 要清掉隔离标记：
 
 ```bash
-xattr -d com.apple.quarantine /Applications/LanDeploy.app
+xattr -dr com.apple.quarantine /Applications/LanDeploy.app
 ```
 
-或者在 Finder 里右键 → 打开，再确认一次。
+**先把 App 从 DMG 拖进「应用程序」再执行这条命令**——对着 DMG 里那份执行不会生效。不需要 `sudo`。
 
 ## 这个工具做什么
 
