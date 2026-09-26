@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LanDeploy · 局域网分发 iOS 测试包</title>
+<meta name="description" content="把用 Ad Hoc 描述文件签名的 iOS 安装包，通过局域网分发给同一 Wi-Fi 下的 iPhone 和 iPad。扫码即可安装。">
+<link rel="icon" href="app-icon.png">
+<link rel="apple-touch-icon" href="app-icon.png">
+<style>
+/*
+ * 视觉语言与 App 外观一致，两者都来自同一个图标：
+ *   1. 光从左上来 —— 受光边在上、阴影偏右下
+ *   2. 玻璃，不是卡片 —— 半透明 + 顶边亮线 + 背景模糊
+ *   3. 渐变只用在会动的地方 —— 主按钮、品牌标
+ *   4. 深靛，不是黑
+ *   5. 画布有光晕 —— 柔和的蓝紫径向光
+ *   6. 圆角分等级 —— 大容器 22px、按钮 13px、标签 7px
+ */
+:root {
+  --ink: #0b0924;
+  --ink-2: #141138;
+  --glass: rgba(255, 255, 255, 0.055);
+  --glass-hover: rgba(255, 255, 255, 0.09);
+  --edge: rgba(255, 255, 255, 0.1);
+  --edge-bright: rgba(255, 255, 255, 0.22);
+  --cyan: #3dbafc;
+  --blue: #2f8dfb;
+  --violet: #6b5cf6;
+  --grad: linear-gradient(135deg, #3dbafc 0%, #2f8dfb 46%, #6b5cf6 100%);
+  --paper: #eef1ff;
+  --paper-2: #b8c0e6;
+  --paper-3: #858dc0;
+  --warn: #f0b24a;
+  --danger: #ff6b8a;
+  --radius: 22px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  color: var(--paper);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
+               "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  background:
+    radial-gradient(120% 85% at 14% -12%, #1e2f7d 0%, transparent 55%),
+    radial-gradient(95% 70% at 104% 108%, #2d1a68 0%, transparent 58%),
+    var(--ink);
+  background-attachment: fixed;
+}
+
+.wrap { max-width: 940px; margin: 0 auto; padding: 0 24px; }
+
+a { color: var(--cyan); text-decoration: none; }
+a:hover { text-decoration: underline; }
+a:focus-visible, button:focus-visible {
+  outline: 2px solid #7cc4ff; outline-offset: 3px; border-radius: 4px;
+}
+
+/* ---------- 首屏 ---------- */
+
+.hero {
+  display: flex;
+  align-items: center;
+  gap: 48px;
+  padding: 84px 0 64px;
+}
+
+.hero-copy { flex: 1; min-width: 0; }
+
+.hero h1 {
+  margin: 0 0 16px;
+  font-size: clamp(30px, 5vw, 44px);
+  line-height: 1.22;
+  font-weight: 680;
+  letter-spacing: -0.02em;
+}
+
+.hero p {
+  margin: 0 0 30px;
+  max-width: 30em;
+  font-size: 16px;
+  color: var(--paper-2);
+}
+
+/* 图标放大做首屏主视觉，自带一圈同色柔光——和 App 里的品牌位同源 */
+.hero-mark {
+  flex-shrink: 0;
+  width: 208px;
+  height: 208px;
+  border-radius: 46px;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 28px 70px rgba(47, 141, 251, 0.42),
+    0 8px 24px rgba(5, 3, 26, 0.5);
+}
+
+/* ---------- 按钮 ---------- */
+
+.actions { display: flex; flex-wrap: wrap; gap: 12px; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 22px;
+  border: 0;
+  border-radius: 13px;
+  font-size: 14.5px;
+  font-weight: 620;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* 主按钮是全站唯一大面积使用图标渐变的地方 */
+.btn-primary {
+  background: var(--grad);
+  color: #fff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 10px 26px rgba(47, 141, 251, 0.42);
+}
+
+.btn-primary:hover { text-decoration: none; box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 12px 32px rgba(47,141,251,.55); }
+
+.btn-ghost {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--edge);
+  color: var(--paper);
+}
+
+.btn-ghost:hover { text-decoration: none; background: rgba(255, 255, 255, 0.12); }
+
+/* ---------- 分节 ---------- */
+
+section { padding: 54px 0; }
+
+h2 {
+  margin: 0 0 10px;
+  font-size: 24px;
+  font-weight: 660;
+  letter-spacing: -0.01em;
+}
+
+.lede { margin: 0 0 30px; color: var(--paper-2); font-size: 15px; max-width: 34em; }
+
+/* 玻璃表面：受光边在顶部 */
+.card {
+  padding: 24px;
+  border-radius: var(--radius);
+  background: var(--glass);
+  border: 1px solid var(--edge);
+  backdrop-filter: blur(24px) saturate(140%);
+  box-shadow: inset 0 1px 0 var(--edge-bright), 0 18px 40px rgba(5, 3, 26, 0.5);
+}
+
+/* ---------- 三步 ---------- */
+
+/*
+ * 这里用编号是有理由的：内容真的是个序列（导入 → 启动 → 扫码），
+ * 编号承载的是「先后顺序」，不是装饰。
+ */
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; counter-reset: step; }
+
+.step { position: relative; padding-top: 62px; }
+
+.step::before {
+  counter-increment: step;
+  content: counter(step);
+  position: absolute;
+  top: 20px;
+  left: 24px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: var(--grad);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.4), 0 6px 16px rgba(47,141,251,.4);
+}
+
+.step h3 { margin: 0 0 6px; font-size: 15.5px; font-weight: 640; }
+.step p { margin: 0; font-size: 13.5px; color: var(--paper-2); }
+
+/* ---------- 设备端设置 ---------- */
+
+.setup { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+.setup ol { margin: 0; padding-left: 20px; font-size: 14px; color: var(--paper-2); }
+.setup li + li { margin-top: 8px; }
+.setup strong { color: var(--paper); font-weight: 620; }
+
+.note {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 13px;
+  background: rgba(240, 178, 74, 0.12);
+  border: 1px solid rgba(240, 178, 74, 0.3);
+  color: #f7d79a;
+  font-size: 13.5px;
+}
+
+/* ---------- 下载 ---------- */
+
+.downloads { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+
+.dl {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 20px;
+  border-radius: 18px;
+  background: var(--glass);
+  border: 1px solid var(--edge);
+  backdrop-filter: blur(24px) saturate(140%);
+  box-shadow: inset 0 1px 0 var(--edge-bright), 0 18px 40px rgba(5, 3, 26, 0.5);
+  color: var(--paper);
+  transition: border-color .15s, background .15s;
+}
+
+.dl:hover {
+  text-decoration: none;
+  border-color: var(--edge-bright);
+  background: var(--glass-hover);
+}
+
+.dl-platform { font-size: 14.5px; font-weight: 640; }
+.dl-detail { font-size: 12.5px; color: var(--paper-3); }
+.dl-arrow { margin-top: 10px; font-size: 13px; color: var(--cyan); }
+
+/* ---------- 常见问题 ---------- */
+
+.faq { display: flex; flex-direction: column; gap: 14px; }
+.faq h3 { margin: 0 0 6px; font-size: 15px; font-weight: 640; }
+.faq p { margin: 0; font-size: 13.5px; color: var(--paper-2); }
+.faq code {
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12.5px;
+  color: #a5dcff;
+  word-break: break-all;
+}
+pre {
+  margin: 10px 0 0;
+  padding: 13px 15px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--edge);
+  overflow-x: auto;
+}
+pre code { background: none; padding: 0; color: #a5dcff; font-size: 12.5px; }
+
+/* ---------- 页脚 ---------- */
+
+footer {
+  padding: 40px 0 56px;
+  border-top: 1px solid var(--edge);
+  color: var(--paper-3);
+  font-size: 13px;
+}
+
+/* ---------- 窄屏 ---------- */
+
+@media (max-width: 760px) {
+  .hero { flex-direction: column-reverse; align-items: flex-start; gap: 32px; padding: 56px 0 40px; text-align: left; }
+  .hero-mark { width: 132px; height: 132px; border-radius: 30px; }
+  .steps { grid-template-columns: 1fr; }
+  .setup { grid-template-columns: 1fr; }
+  section { padding: 40px 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="hero-copy">
+      <h1>把 iOS 测试包<br>送到同事手机上</h1>
+      <p>
+        LanDeploy 在一台电脑上开一个局域网服务，把用 Ad Hoc 描述文件签名的
+        IPA 分发出去。测试的同学用 iPhone 扫个码就能装，不用连线、不用装工具。
+      </p>
+      <div class="actions">
+        <a class="btn btn-primary" href="https://github.com/LUCK-YXH/LanDeploy/releases/latest">
+          下载最新版 <span id="version"></span>
+        </a>
+        <a class="btn btn-ghost" href="#downloads">按平台选择</a>
+      </div>
+    </div>
+    <img class="hero-mark" src="app-icon.png" alt="LanDeploy" width="208" height="208">
+  </div>
+
+  <section>
+    <h2>三步</h2>
+    <p class="lede">管理端在电脑上操作，设备端只需要扫码。</p>
+    <div class="steps">
+      <div class="step card">
+        <h3>导入安装包</h3>
+        <p>把已经签好名的 IPA 拖进来。多余的信息——图标、版本、签名类型、描述文件什么时候过期——会自动读出来。</p>
+      </div>
+      <div class="step card">
+        <h3>启动服务</h3>
+        <p>点一下「启动」，电脑就成了分发点，并生成二维码。同一个 Wi-Fi 下的设备都能访问。</p>
+      </div>
+      <div class="step card">
+        <h3>扫码安装</h3>
+        <p>设备用 Safari 扫码，按提示装包。哪些包是开发版、哪些描述文件快过期了，页面上都标着。</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>设备端的一次性设置</h2>
+    <p class="lede">每台设备只需要做一次，之后扫码即装。</p>
+    <div class="setup">
+      <div class="card">
+        <strong>在设备上完成两步</strong>
+        <ol>
+          <li>扫码打开引导页，下载并安装证书描述文件。</li>
+          <li>到「设置 › 通用 › 关于本机 › <strong>证书信任设置</strong>」开启完全信任。</li>
+        </ol>
+        <div class="note">
+          第二步容易漏。装完描述文件<strong>不等于</strong>被信任，必须再单独打开那个开关。
+        </div>
+      </div>
+      <div class="card">
+        <strong>为什么会需要证书</strong>
+        <p style="margin:0;font-size:13.5px;color:var(--paper-2)">
+          分发走的是本地 HTTPS，用的是自签根证书，所以设备要先认识它。
+          这是 iOS 的要求，且手动安装的根证书必须由使用者亲自开启完全信任——
+          没有可以绕过的办法。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="downloads">
+    <h2>下载</h2>
+    <p class="lede">打包由 CI 自动完成，产物发布在公开仓库里。</p>
+    <div class="downloads">
+      <a class="dl" data-download="mac-arm" href="https://github.com/LUCK-YXH/LanDeploy/releases/latest">
+        <span class="dl-platform">macOS · Apple Silicon</span>
+        <span class="dl-detail">M 系列芯片，.dmg</span>
+        <span class="dl-arrow">下载</span>
+      </a>
+      <a class="dl" data-download="mac-intel" href="https://github.com/LUCK-YXH/LanDeploy/releases/latest">
+        <span class="dl-platform">macOS · Intel</span>
+        <span class="dl-detail">x86_64，.dmg</span>
+        <span class="dl-arrow">下载</span>
+      </a>
+      <a class="dl" data-download="win" href="https://github.com/LUCK-YXH/LanDeploy/releases/latest">
+        <span class="dl-platform">Windows</span>
+        <span class="dl-detail">x64，.exe 安装程序</span>
+        <span class="dl-arrow">下载</span>
+      </a>
+      <a class="dl" data-download="linux-deb" href="https://github.com/LUCK-YXH/LanDeploy/releases/latest">
+        <span class="dl-platform">Linux</span>
+        <span class="dl-detail">Debian / Ubuntu，.deb</span>
+        <span class="dl-arrow">下载</span>
+      </a>
+      <a class="dl" data-download="linux-appimage" href="https://github.com/LUCK-YXH/LanDeploy/releases/latest">
+        <span class="dl-platform">Linux · 通用</span>
+        <span class="dl-detail">不挑发行版，.AppImage</span>
+        <span class="dl-arrow">下载</span>
+      </a>
+    </div>
+  </section>
+
+  <section>
+    <h2>常见问题</h2>
+    <div class="faq">
+      <div class="card">
+        <h3>macOS 说「无法验证开发者」</h3>
+        <p>
+          产物没有做 Apple 开发者签名与公证，系统会拦一次。
+          <strong>右键点击 App → 打开 → 再点一次「打开」</strong>即可，之后双击就能正常启动。
+        </p>
+      </div>
+      <div class="card">
+        <h3>macOS 说「已损坏，无法打开」</h3>
+        <p>
+          这两句话听起来像同一件事，其实不是，处理方式也不同：
+        </p>
+        <p style="margin-top:8px">
+          <strong>无法验证开发者</strong>是系统不认识发布者——签名是好的，右键打开就行。<br>
+          <strong>已损坏</strong>是签名本身校验不过——没有点开的路径，只能清掉隔离标记。
+        </p>
+        <p style="margin-top:10px">
+          提示「已损坏」说明拿到的是 <strong>0.1.0 的旧包</strong>，那个版本打包时漏了签名步骤。
+          请改用 0.1.1 及以上；确实需要救急，就清掉隔离标记：
+        </p>
+        <pre><code>xattr -dr com.apple.quarantine /Applications/LanDeploy.app</code></pre>
+        <p style="margin-top:8px">先把 App 从 DMG 拖进「应用程序」再执行，对着 DMG 里那份执行不生效。</p>
+      </div>
+      <div class="card">
+        <h3>设备上提示「无法安装」</h3>
+        <p>
+          先看管理端列表里的标记：<strong>签名校验未通过</strong>、<strong>描述文件已过期</strong>
+          都能一眼看到。最常见的三个原因是描述文件过期、签名损坏，以及这台设备的
+          UDID 不在描述文件里。
+        </p>
+      </div>
+      <div class="card">
+        <h3>设备上提示「无法验证此 App 的完整性」</h3>
+        <p>
+          多半是重签名时<strong>顺序反了</strong>：嵌套的 framework 要先签，主程序最后签。
+          签完务必复核一次——签名成功不等于签名正确：
+        </p>
+        <pre><code>codesign --verify --deep --strict /path/to/YourApp.app</code></pre>
+      </div>
+      <div class="card">
+        <h3>扫码后设备打不开页面</h3>
+        <p>
+          确认两件事：设备与电脑在同一个可互访的局域网（有些 Wi-Fi 会做访客隔离），
+          以及电脑防火墙放行了界面显示的那个端口。端口被占时会自动回退到别的端口，
+          界面上会明确提示——此时之前发出的二维码和链接都已失效。
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p style="margin:0 0 8px">
+      本工具只负责分发，<strong>不负责签名，也不注册设备</strong>。
+      IPA 需要预先用包含测试设备 UDID 的描述文件签名。
+    </p>
+    <p style="margin:0">
+      <a href="https://github.com/LUCK-YXH/LanDeploy/releases">全部版本</a>
+    </p>
+  </footer>
+
+</div>
+
+<script>
+/*
+ * 把各平台按钮直接指到最新版本的对应文件，而不是让使用者自己在一堆附件里找。
+ * 拿不到就留在「最新版」页面——降级成两步，而不是留下死链接。
+ */
+(function () {
+  var repo = "LUCK-YXH/LanDeploy";
+  var patterns = {
+    "mac-arm": /aarch64\.dmg$/,
+    "mac-intel": /x64\.dmg$/,
+    "win": /x64-setup\.exe$/,
+    "linux-deb": /amd64\.deb$/,
+    "linux-appimage": /amd64\.AppImage$/
+  };
+
+  fetch("https://api.github.com/repos/" + repo + "/releases/latest")
+    .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+    .then(function (release) {
+      var versionEl = document.getElementById("version");
+      if (versionEl && release.tag_name) versionEl.textContent = release.tag_name;
+
+      Object.keys(patterns).forEach(function (key) {
+        var el = document.querySelector('[data-download="' + key + '"]');
+        if (!el) return;
+        var asset = (release.assets || []).filter(function (a) {
+          return patterns[key].test(a.name);
+        })[0];
+        if (asset) el.href = asset.browser_download_url;
+      });
+    })
+    .catch(function () {
+      /* 保持指向 releases/latest，不影响使用 */
+    });
+})();
+</script>
+
+</body>
+</html>
