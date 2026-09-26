@@ -105,12 +105,17 @@ a:focus-visible, button:focus-visible {
     0 8px 22px rgba(5, 3, 26, 0.5);
 }
 
+/* 图标随字号缩放，不用给每个位置单独量尺寸 */
+.ico { display: block; width: 1em; height: 1em; flex-shrink: 0; }
+
 /* 主按钮下面的一句实话，比一排「·」分隔的标签好读 */
 .after-cta {
   margin: 16px 0 0;
   font-size: 13px;
   color: var(--paper-3);
 }
+
+.after-cta a { white-space: nowrap; }
 
 /* ---------- 按钮 ---------- */
 
@@ -333,8 +338,49 @@ h2 {
 
 .dl.is-rec .dl-badge { display: inline-block; }
 
-.dl-detail { font-size: 12.5px; color: var(--paper-3); }
-.dl-arrow { margin-top: 10px; font-size: 13px; color: var(--cyan); }
+.dl-detail { font-size: 12.5px; color: var(--paper-3); margin-bottom: 14px; }
+
+/*
+ * 整张卡都是链接，但动作得有个看得见的落点——之前只是两个青色小字，
+ * 看不出这里能点。做成按钮，并且被推荐的那张用渐变：
+ * 它和首屏主按钮是同一个动作，理应长得一样。
+ * margin-top:auto 让五张卡（网格拉伸等高）的按钮底边对齐。
+ */
+.dl-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: auto;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--edge);
+  font-size: 13px;
+  font-weight: 620;
+  color: var(--paper);
+  transition: background .15s, border-color .15s, color .15s, box-shadow .15s;
+}
+
+.dl:hover .dl-action {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: var(--edge-bright);
+}
+
+.dl.is-rec .dl-action {
+  background: var(--grad);
+  border-color: transparent;
+  color: #fff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    0 6px 16px rgba(47, 141, 251, 0.36);
+}
+
+.dl.is-rec:hover .dl-action {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    0 8px 22px rgba(47, 141, 251, 0.5);
+}
 
 /* ---------- 常见问题 ---------- */
 
@@ -369,6 +415,16 @@ footer {
   color: var(--paper-3);
   font-size: 13px;
 }
+
+.footer-links {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.footer-links a { display: inline-flex; align-items: center; gap: 6px; }
 
 /* ---------- 窄屏 ---------- */
 
@@ -436,11 +492,24 @@ footer {
       </p>
       <div class="actions">
         <a class="btn btn-primary" id="primary-dl" href="https://github.com/LUCK-YXH/LanDeploy/releases/latest">
+          <svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M8 2.4v8.2M4.5 7.2 8 10.7l3.5-3.5M2.9 13.4h10.2"/>
+          </svg>
           <span id="primary-label">下载最新版</span>
         </a>
-        <a class="btn btn-ghost" href="#downloads">按平台选择</a>
+        <!-- 去向是公开的产物仓库，源码不在这里——别写成「源码」 -->
+        <a class="btn btn-ghost" href="https://github.com/LUCK-YXH/LanDeploy"
+           target="_blank" rel="noreferrer">
+          <svg class="ico" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/>
+          </svg>
+          GitHub
+        </a>
       </div>
-      <p class="after-cta">电脑端支持 macOS、Windows 和 Linux；手机上只需要 Safari。</p>
+      <p class="after-cta">
+        电脑端支持 macOS、Windows 和 Linux，手机上只要 Safari。其他系统请<a href="#downloads">按平台选择</a>。
+      </p>
     </div>
     <img class="hero-mark" src="app-icon.png" alt="LanDeploy" width="176" height="176">
   </div>
@@ -535,7 +604,13 @@ footer {
           <span class="dl-badge">你的系统</span>
         </span>
         <span class="dl-detail">Apple 芯片，.dmg</span>
-        <span class="dl-arrow">下载</span>
+        <span class="dl-action">
+          <svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M8 2.4v8.2M4.5 7.2 8 10.7l3.5-3.5M2.9 13.4h10.2"/>
+          </svg>
+          下载
+        </span>
       </a>
       <a class="dl" data-download="mac-intel" href="https://github.com/LUCK-YXH/LanDeploy/releases/latest">
         <span class="dl-head">
@@ -543,7 +618,13 @@ footer {
           <span class="dl-badge">你的系统</span>
         </span>
         <span class="dl-detail">x86_64，.dmg</span>
-        <span class="dl-arrow">下载</span>
+        <span class="dl-action">
+          <svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M8 2.4v8.2M4.5 7.2 8 10.7l3.5-3.5M2.9 13.4h10.2"/>
+          </svg>
+          下载
+        </span>
       </a>
       <a class="dl" data-download="win" href="https://github.com/LUCK-YXH/LanDeploy/releases/latest">
         <span class="dl-head">
@@ -551,23 +632,41 @@ footer {
           <span class="dl-badge">你的系统</span>
         </span>
         <span class="dl-detail">x64，.exe 安装程序</span>
-        <span class="dl-arrow">下载</span>
+        <span class="dl-action">
+          <svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M8 2.4v8.2M4.5 7.2 8 10.7l3.5-3.5M2.9 13.4h10.2"/>
+          </svg>
+          下载
+        </span>
       </a>
       <a class="dl" data-download="linux-deb" href="https://github.com/LUCK-YXH/LanDeploy/releases/latest">
         <span class="dl-head">
-          <span class="dl-platform">Linux</span>
+          <span class="dl-platform">Linux · deb</span>
           <span class="dl-badge">你的系统</span>
         </span>
-        <span class="dl-detail">Debian / Ubuntu，.deb</span>
-        <span class="dl-arrow">下载</span>
+        <span class="dl-detail">Debian / Ubuntu</span>
+        <span class="dl-action">
+          <svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M8 2.4v8.2M4.5 7.2 8 10.7l3.5-3.5M2.9 13.4h10.2"/>
+          </svg>
+          下载
+        </span>
       </a>
       <a class="dl" data-download="linux-appimage" href="https://github.com/LUCK-YXH/LanDeploy/releases/latest">
         <span class="dl-head">
-          <span class="dl-platform">Linux · 通用</span>
+          <span class="dl-platform">Linux · AppImage</span>
           <span class="dl-badge">你的系统</span>
         </span>
-        <span class="dl-detail">不挑发行版，.AppImage</span>
-        <span class="dl-arrow">下载</span>
+        <span class="dl-detail">不挑发行版</span>
+        <span class="dl-action">
+          <svg class="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M8 2.4v8.2M4.5 7.2 8 10.7l3.5-3.5M2.9 13.4h10.2"/>
+          </svg>
+          下载
+        </span>
       </a>
     </div>
   </section>
@@ -630,8 +729,14 @@ footer {
       本工具只负责分发，<strong>不负责签名，也不注册设备</strong>。
       IPA 需要预先用包含测试设备 UDID 的描述文件签名。
     </p>
-    <p style="margin:0">
+    <p class="footer-links">
       <a href="https://github.com/LUCK-YXH/LanDeploy/releases">全部版本</a>
+      <a href="https://github.com/LUCK-YXH/LanDeploy" target="_blank" rel="noreferrer">
+        <svg class="ico" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/>
+        </svg>
+        LUCK-YXH/LanDeploy
+      </a>
     </p>
   </footer>
 
